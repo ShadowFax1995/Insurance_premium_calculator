@@ -1,160 +1,135 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+#Creation of data arrays as per IRDA and company guidelines
 
-# C extensions
-*.so
+tp_rate = [16049, 27186, 35313, 43950, 44242]
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+tarriff_rate = [0.01726, 0.01770, 0.01812]
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+discount = [0.4, 0.15, 0.2, 0.23]
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+#IDV
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+idv = int(input("Enter IDV required:"))
 
-# Translations
-*.mo
-*.pot
+#Calculate vehicle age for tarrif rate application
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+year_of_manufacture = int(input("Enter Year of Manufacture:"))
 
-# Flask stuff:
-instance/
-.webassets-cache
+age = 2023 - year_of_manufacture
 
-# Scrapy stuff:
-.scrapy
+#print ("Age of Vehicle:", age)
 
-# Sphinx documentation
-docs/_build/
+#Calculate GVW for TP and OD loading
 
-# PyBuilder
-.pybuilder/
-target/
+gross_vehicle_weight =int(input("Enter GVW of Vehicle:"))
 
-# Jupyter Notebook
-.ipynb_checkpoints
+gvw_for_calculation = 0
 
-# IPython
-profile_default/
-ipython_config.py
+if gross_vehicle_weight > 12000:
+    gvw_for_calculation = gross_vehicle_weight - 12000
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+#print ("GVW for calc:", gvw_for_calculation)
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+#Basic OD Calculation
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
+od_tariff = idv * tarriff_rate
 
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/#use-with-ide
-.pdm.toml
+if age <= 5:
+    od_tariff = idv * tarriff_rate[0]
+elif age > 5 and age <=7:
+    od_tariff = idv * tarriff_rate[1]
+elif age > 7:
+    od_tariff = idv * tarriff_rate[2]
+else:
+    print("Error, please run program again")
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
+#print("Basic OD Tariff:", od_tariff)
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+#OD calculation without discount and IMT 23
 
-# SageMath parsed files
-*.sage.py
+od_premium = (od_tariff + (gvw_for_calculation*0.27))
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+#print("OD premium without discount:", od_premium)
 
-# Spyder project settings
-.spyderproject
-.spyproject
+#application of discount
 
-# Rope project settings
-.ropeproject
+discounted_odpremium = od_premium * 1
 
-# mkdocs documentation
-/site
+if age < 5 and gross_vehicle_weight > 12000:
+    discounted_odpremium = od_premium * discount[0]
+elif age > 5 and gross_vehicle_weight > 12000:
+    discounted_odpremium = od_premium * discount[1]
+elif gross_vehicle_weight <= 2500:
+    discounted_odpremium = od_premium * discount[2]
+elif gross_vehicle_weight > 2500 and gross_vehicle_weight <=3500:
+    discounted_odpremium = od_premium * discount[3]
+elif gross_vehicle_weight > 40000:
+    discounted_odpremium = od_premium * discount[0]
+else:
+    print("Wrong data entered")
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+#print("Discounted OD premium:", discounted_odpremium)
 
-# Pyre type checker
-.pyre/
+#OD with IMT 23
 
-# pytype static type analyzer
-.pytype/
+od_with_imt23 = discounted_odpremium + (discounted_odpremium * 0.15)
 
-# Cython debug symbols
-cython_debug/
+#NCB
 
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+ncb = int(input("Enter NCB here(no % sign please):"))
+
+ncb_percentage = ncb/100
+
+#Final OD calculation
+
+net_od = od_with_imt23 - (od_with_imt23 * ncb_percentage)
+
+print("Net Own Damage premium:", net_od)
+
+gst_od = net_od + (net_od * 0.18)
+
+#print ("Payable OD with GST:", gst_od)
+
+#OD Calculation Finishes here final variable is gst_od for total payable premium calculation
+
+#TP calculation
+
+if gross_vehicle_weight <= 7500:
+    net_basic_tp = tp_rate[0]
+elif gross_vehicle_weight > 7500 and gross_vehicle_weight <= 12000:
+    net_basic_tp = tp_rate[1]
+elif gross_vehicle_weight > 12000 and gross_vehicle_weight <= 20000:
+    net_basic_tp = tp_rate[2]
+elif gross_vehicle_weight > 20000 and gross_vehicle_weight <=40000:
+    net_basic_tp = tp_rate[3]
+elif gross_vehicle_weight > 40000:
+    net_basic_tp = tp_rate[4]
+else:
+    print ("Something went wrong")
+
+tp_basic = net_basic_tp + (net_basic_tp * 0.12)
+
+#print("Basic TP premium with 12% GST:", tp_basic)
+
+#Add owner driver and passanger cover
+
+owner_pa = int(input("Enter owner driver PA cover premium amount: "))
+
+imt_28_39 = int(input("Enter driver/cleaner/conductor/coolie premium: "))
+
+tp_misc = (owner_pa + imt_28_39) * 1.18
+
+#print ("tp misc", tp_misc)
+
+#Calculate total TP
+
+total_tp = tp_basic + tp_misc
+
+#print("Total payable TP:", total_tp)
+
+#Final Premium calculation
+
+total_premium = gst_od + total_tp
+
+print ("Total Net Premium: ", net_basic_tp + owner_pa + imt_28_39 + net_od)
+
+print ("Total premium payable:", total_premium)
